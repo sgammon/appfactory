@@ -1,4 +1,6 @@
 
+__version__ = '0.1-alpha'
+
 ## Internals
 from appfactory.internal import trigger
 from appfactory.internal import transport

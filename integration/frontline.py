@@ -14,11 +14,14 @@ _FRONTLINE_HEADERS = frozenset(['Frontline',
 								'Protocol',
 								'Version',
 								'Entrypoint',
-								'Flags'])
+								'Flags',
+								'Client',
+								'Hash',
+								'Channel'])
 
 
 ## Flags - frozen set of reserved flags that can appear in the "Flags" header
-_FRONTLINE_FLAGS = frozenset(['ap', 'opt', 'spdy', 'ps'])
+_FRONTLINE_FLAGS = frozenset(['ap', 'opt', 'spdy', 'ps', 'pri', 'ofr',  'ins', 'wsp'])
 
 
 ## FrontlineBus
@@ -43,6 +46,22 @@ class FrontlineBus(CommandBus):
 		return debug.AppToolsLogger(path='appfactory.integration.frontline', name='FrontlineBus')._setcondition(self.config.get('debug', False))
 
 	## == Meta Header Triggers == ##
+	def __hash(self, handler, value):
+
+		''' Set internal request hash. '''
+
+		if isinstance(value, basestring) and len(value) > 0:
+			handler.request_hash = value
+		return
+
+	def __channel(self, handler, value):
+
+		''' Set internal push endpoint. '''
+
+		if isinstance(value, basestring) and len(value) > 0:
+			handler.push_channel = value
+		return
+
 	def __flags(self, handler, value):
 
 		''' Set reserved flags. '''
@@ -73,10 +92,56 @@ class FrontlineBus(CommandBus):
 
 		if isinstance(value, basestring) and len(value) > 0:
 			try:
+
 				# Pass through httpagentparser
 				handler.uagent = handler.util.httpagentparser(value)
+				handler.uagent['original'] = value
+
 			except Exception, e:
+
 				self.logging.warning('Unable to parse AppFactory UserAgent header with value "%s". Exception: "%s".' % (e ,uagent))
+				return
+
+	def __client(self, handler, value):
+
+		''' Consider the true remote IP, not the frontline IP. '''
+
+		if isinstance(value, basestring) and len(value) > 0:
+			try:
+
+				# Make sure it's something resembling an IP.
+				ip_octets = [int(i) for i in value.split('.')]
+				assert len(ip_octets) == 4
+
+				# Make sure it's not a private or invalid IP.
+				assert ip_octets[0] != 10
+				assert 255 not in ip_octets
+				assert (ip_octets[0] != 0 and ip_octets[-1] != 0)
+				assert (ip_octets[0] != 172 and ip_octets[1] != 16)
+				assert (ip_octets[0] != 192 and ip_octets[1] != 168)
+
+			except ValueError, e:
+
+				# If it could not be split or converted...
+				self.logging.error('Invalid IP given for AppFactory remote client header. Value given: "%s"' % value)
+				if config.debug:
+					raise
+				else:
+					return
+
+			except AssertionError, e:
+
+				# If it's a private, broadcast or subnet mask IP...
+				self.logging.error('Private, broadcast or subnet mask given as remote IP. Invalid value given was "%s". Discarding.' % value)
+				if config.debug:
+					raise
+				else:
+					return
+
+			else:
+
+				# If everything passed, set the overridden remote IP.
+				handler.force_remoteip = '.'.join([str(octet) for octet in ip_octets])
 				return
 
 	def __broker(self, handler, value):
@@ -140,9 +205,12 @@ class FrontlineBus(CommandBus):
 
 	trigger = datastructures.DictProxy({
 
+		'hash': __hash,
 		'flags': __flags,
 		'agent': __agent,
+		'client': __client,
 		'broker': __broker,
+		'channel': __channel,
 		'version': __version,
 		'protocol': __protocol,
 		'hostname': __hostname,
