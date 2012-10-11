@@ -174,6 +174,7 @@ class FrontlineBus(CommandBus):
 
 		if isinstance(value, basestring) and len(value) > 0:
 			if value.lower().lstrip().rstrip() == 'https':
+				handler.force_https = True
 				handler.force_https_assets = True
 				handler.force_absolute_assets = True
 		return

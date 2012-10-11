@@ -27,6 +27,10 @@ class UpstreamBus(CommandBus):
 
 		''' Add headers to a response indicating associated static content, to allow the browser to preload/the server to push via SPDY, if enabled. '''
 
+		# Add generic stuff to the result...
+		if 'REQUEST_ID_HASH' in handler.request.environ:
+			handler.response.headers['X-Request-Hash'] = handler.request.environ.get('REQUEST_ID_HASH')
+
 		# If hinted asset preloading is enabled...
 		self.logging.info('Considering upstream preloader hinting...')
 		if self.config.get('enabled', False) and self.config.get('preloading', {}).get('gather_assets', False):
@@ -89,6 +93,7 @@ class UpstreamBus(CommandBus):
 		''' Dump the upstream state to memcache, so stats and realtime operations can be introspected and displayed. '''
 
 		self.logging.info('Dumped AppFactory Upstream state.')
+		self.logging.info('--SPDY Push: "X-Associated-Content: %s"' % handler.response.headers.get('X-Associated-Content', None))
 
 
 IntegrationBridge = UpstreamBus()
