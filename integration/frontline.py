@@ -1,10 +1,16 @@
+# -*- coding: utf-8 -*-
+
+# Base Imports
 import config
 import webapp2
 
+# AppTools Util
 from apptools.util import debug
 from apptools.util import datastructures
 
+# Integration Primitives
 from appfactory.integration.abstract import CommandBus
+
 
 ## Headers - frozen set of possible frontline-provided headers
 _FRONTLINE_HEADERS = frozenset(['Frontline',

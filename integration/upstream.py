@@ -1,14 +1,23 @@
+# -*- coding: utf-8 -*-
+
+# Base Imports
 import config
 import webapp2
 
+# AppTools Util
 from apptools.util import debug
+
+# Integration Primitives
 from appfactory.integration.abstract import CommandBus
 
 
+## UpstreamBus
+# AppFactory upstream layer integration bus.
 class UpstreamBus(CommandBus):
 
 	''' AppFactory upstream layer integration. '''
 
+	## == Internal Methods == ##
 	@webapp2.cached_property
 	def config(self):
 
@@ -23,6 +32,7 @@ class UpstreamBus(CommandBus):
 
 		return debug.AppToolsLogger(path='appfactory.integration.upstream', name='UpstreamBus')._setcondition(self.config.get('debug', False))
 
+	## == Exports == ##
 	def hint(self, handler, result):
 
 		''' Add headers to a response indicating associated static content, to allow the browser to preload/the server to push via SPDY, if enabled. '''

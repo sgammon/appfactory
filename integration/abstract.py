@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
+
+# Base Imports
 import config
 import webapp2
 
 
+## CommandBus
+# Abstract parent for integration classes.
 class CommandBus(object):
 
 	''' Abstract parent for integration classes that add methods to trigger or respond to AppFactory-specific functionality. '''

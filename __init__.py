@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
 
+__author__ = 'Sam Gammon <sam@momentum.io>'
 __version__ = '0.1-alpha'
+__license__ = 'Copyright © momentum labs, 2012. All rights reserved.'
 
 ## Internals
 from appfactory.internal import trigger

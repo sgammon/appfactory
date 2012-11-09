@@ -1,1 +1,2 @@
-## AppFactory message signing
+# -*- coding: utf-8 -*-
+# AppFactory Message Signing

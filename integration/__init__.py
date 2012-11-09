@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-# AppTools util
+# AppTools Util
 from apptools.util import debug
 from apptools.util import datastructures
 
-# Import layer controllers
+# Layer9 Command Busses
 from appfactory.integration.upstream import IntegrationBridge as UpstreamIntegrationBus
 from appfactory.integration.frontline import IntegrationBridge as FrontlineIntegrationBus
 from appfactory.integration.controller import IntegrationBridge as ControllerIntegrationBus

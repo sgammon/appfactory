@@ -1,1 +1,2 @@
-## AppFactory transport bus
+# -*- coding: utf-8 -*-
+# AppFactory Transport Bus
