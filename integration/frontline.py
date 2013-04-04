@@ -252,8 +252,7 @@ class FrontlineBus(CommandBus):
 		''' Sniff a request for headers that were added by the AppFactory upstream servers. '''
 
 		self.logging.info('Sniffing request for AppFactory frontline headers.')
-
-		if self._l9config.get('headers', {}).get('use_compact', False):
+		if not self._l9config.get('headers', {}).get('use_compact', False):
 			prefix = self._l9config.get('headers', {}).get('full_prefix', 'X-AppFactory')
 		else:
 			prefix = self._l9config.get('headers', {}).get('compact_prefix', 'XAF')
