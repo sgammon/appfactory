@@ -9,6 +9,7 @@ from apptools.util import debug
 from apptools.util import datastructures
 
 # Integration Primitives
+from appfactory.integration import AppFactoryMixin
 from appfactory.integration.abstract import CommandBus
 
 
@@ -27,7 +28,7 @@ _FRONTLINE_HEADERS = frozenset(['Frontline',
 
 
 ## Flags - frozen set of reserved flags that can appear in the "Flags" header
-_FRONTLINE_FLAGS = frozenset(['ap', 'opt', 'spdy', 'ps', 'pri', 'ofr',  'ins', 'wsp'])
+_FRONTLINE_FLAGS = frozenset([str(i).lower() for i in AppFactoryMixin.flags.values()])
 
 
 ## FrontlineBus
@@ -81,8 +82,7 @@ class FrontlineBus(CommandBus):
 						k, v = tuple(di_r)
 					else:
 						k, v = tuple(di_r, None)
-					k = k.lower().lstrip().rstrip()
-					if k in _FRONTLINE_FLAGS:
+					if k.lower().strip() in _FRONTLINE_FLAGS:
 						handler.flags[k.upper()] = v
 					else:
 						self.logging.warning('Rogue frontline reserved option encountered, at key "%s". Register or meet your peril!' % k)
@@ -119,26 +119,10 @@ class FrontlineBus(CommandBus):
 				ip_octets = [int(i) for i in value.split('.')]
 				assert len(ip_octets) == 4
 
-				# Make sure it's not a private or invalid IP.
-				assert ip_octets[0] != 10
-				assert 255 not in ip_octets
-				assert (ip_octets[0] != 0 and ip_octets[-1] != 0)
-				assert (ip_octets[0] != 172 and ip_octets[1] != 16)
-				assert (ip_octets[0] != 192 and ip_octets[1] != 168)
-
 			except ValueError, e:
 
 				# If it could not be split or converted...
 				self.logging.error('Invalid IP given for AppFactory remote client header. Value given: "%s"' % value)
-				if config.debug:
-					raise
-				else:
-					return
-
-			except AssertionError, e:
-
-				# If it's a private, broadcast or subnet mask IP...
-				self.logging.error('Private, broadcast or subnet mask given as remote IP. Invalid value given was "%s". Discarding.' % value)
 				if config.debug:
 					raise
 				else:
