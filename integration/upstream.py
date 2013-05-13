@@ -15,95 +15,95 @@ from appfactory.integration.abstract import CommandBus
 # AppFactory upstream layer integration bus.
 class UpstreamBus(CommandBus):
 
-	''' AppFactory upstream layer integration. '''
+    ''' AppFactory upstream layer integration. '''
 
-	## == Internal Methods == ##
-	@webapp2.cached_property
-	def config(self):
+    ## == Internal Methods == ##
+    @webapp2.cached_property
+    def config(self):
 
-		''' Named config access. '''
+        ''' Named config access. '''
 
-		return config.config.get('layer9.appfactory.upstream')
+        return config.config.get('layer9.appfactory.upstream')
 
-	@webapp2.cached_property
-	def logging(self):
+    @webapp2.cached_property
+    def logging(self):
 
-		''' Named logging pipe. '''
+        ''' Named logging pipe. '''
 
-		return debug.AppToolsLogger(path='appfactory.integration.upstream', name='UpstreamBus')._setcondition(self.config.get('debug', False))
+        return debug.AppToolsLogger(path='appfactory.integration.upstream', name='UpstreamBus')._setcondition(self.config.get('debug', False))
 
-	## == Exports == ##
-	def hint(self, handler, result):
+    ## == Exports == ##
+    def hint(self, handler, result):
 
-		''' Add headers to a response indicating associated static content, to allow the browser to preload/the server to push via SPDY, if enabled. '''
+        ''' Add headers to a response indicating associated static content, to allow the browser to preload/the server to push via SPDY, if enabled. '''
 
-		# Add generic stuff to the result...
-		if 'REQUEST_ID_HASH' in handler.request.environ:
-			handler.response.headers['X-Request-Hash'] = handler.request.environ.get('REQUEST_ID_HASH')
+        # Add generic stuff to the result...
+        if 'REQUEST_ID_HASH' in handler.request.environ:
+            handler.response.headers['X-Request-Hash'] = handler.request.environ.get('REQUEST_ID_HASH')
 
-		# If hinted asset preloading is enabled...
-		self.logging.info('Considering upstream preloader hinting...')
-		if self.config.get('enabled', False) and self.config.get('preloading', {}).get('gather_assets', False):
+        # If hinted asset preloading is enabled...
+        self.logging.info('Considering upstream preloader hinting...')
+        if self.config.get('enabled', False) and self.config.get('preloading', {}).get('gather_assets', False):
 
-			# If the handler knows what we're up to...
-			if hasattr(handler, '_gathered_assets'):
+            # If the handler knows what we're up to...
+            if hasattr(handler, '_gathered_assets'):
 
-				self.logging.info('Preloading enabled, handler compatible.')
+                self.logging.info('Preloading enabled, handler compatible.')
 
-				# If SPDY push is how we're preloading...
-				if self.config.get('preloading', {}).get('enable_spdy_push', False) and handler.flags.SPDY:
-					self.logging.info('==== !! SPDY integration mode is enabled. !! ====')
-					enable_spdy = True
-					spdy_config = self.config.get('spdy')
-					header = 'X-Associated-Content'
+                # If SPDY push is how we're preloading...
+                if self.config.get('preloading', {}).get('enable_spdy_push', False) and handler.flags.SPDY:
+                    self.logging.info('==== !! SPDY integration mode is enabled. !! ====')
+                    enable_spdy = True
+                    spdy_config = self.config.get('spdy')
+                    header = 'X-Associated-Content'
 
-				# Otherwise, Firefox understands the `Link` header I guess...
-				else:
-					self.logging.debug('SPDY integration disabled.')
-					enable_spdy = False
-					header = 'Link'
-					spdy_config = {}
+                # Otherwise, Firefox understands the `Link` header I guess...
+                else:
+                    self.logging.debug('SPDY integration disabled.')
+                    enable_spdy = False
+                    header = 'Link'
+                    spdy_config = {}
 
-				# Gather and format headers, optionally with priorities
-				hint_header_values = []
-				for type, ref, priority in handler._gathered_assets:
-					if enable_spdy is True:
-						hint_header = "\"%s\"" % ref
-						if spdy_config.get('push', {}).get('assets', {}).get('force_priority', False):
-							priority = self.config.get('spdy', {}).get('push', {}).get('assets', {}).get('default_priority', 7)
-						if priority:
-							hint_header_values.append(':'.join([hint_header, str(priority)]))
-						else:
-							hint_header_values.append(hint_header)
+                # Gather and format headers, optionally with priorities
+                hint_header_values = []
+                for type, ref, priority in handler._gathered_assets:
+                    if enable_spdy is True:
+                        hint_header = "\"%s\"" % ref
+                        if spdy_config.get('push', {}).get('assets', {}).get('force_priority', False):
+                            priority = self.config.get('spdy', {}).get('push', {}).get('assets', {}).get('default_priority', 7)
+                        if priority:
+                            hint_header_values.append(':'.join([hint_header, str(priority)]))
+                        else:
+                            hint_header_values.append(hint_header)
 
-				self.logging.info('Found %s values to preload.' % len(hint_header_values))
+                self.logging.info('Found %s values to preload.' % len(hint_header_values))
 
-				# Combine and add to response
-				if len(hint_header_values) > 0:
-					handler.response.headers[header] = ", ".join(hint_header_values)
-					if isinstance(result, webapp2.Response):
-						result.headers[header] = handler.response.headers[header]
+                # Combine and add to response
+                if len(hint_header_values) > 0:
+                    handler.response.headers[header] = ", ".join(hint_header_values)
+                    if isinstance(result, webapp2.Response):
+                        result.headers[header] = handler.response.headers[header]
 
-		return result
+        return result
 
-	def sniff(self, handler):
+    def sniff(self, handler):
 
-		''' Sniff a request for headers that were added by the AppFactory upstream servers, to pull partial content or perform other transforms. '''
+        ''' Sniff a request for headers that were added by the AppFactory upstream servers, to pull partial content or perform other transforms. '''
 
-		pass
+        pass
 
-	def dispatch(self, request):
+    def dispatch(self, request):
 
-		''' Dispatch internal functions to change aspects of the environment or request based on a sniffed header. '''
+        ''' Dispatch internal functions to change aspects of the environment or request based on a sniffed header. '''
 
-		pass
+        pass
 
-	def dump(self, handler, result):
+    def dump(self, handler, result):
 
-		''' Dump the upstream state to memcache, so stats and realtime operations can be introspected and displayed. '''
+        ''' Dump the upstream state to memcache, so stats and realtime operations can be introspected and displayed. '''
 
-		self.logging.info('Dumped AppFactory Upstream state.')
-		self.logging.info('--SPDY Push: "X-Associated-Content: %s"' % handler.response.headers.get('X-Associated-Content', None))
+        self.logging.info('Dumped AppFactory Upstream state.')
+        self.logging.info('--SPDY Push: "X-Associated-Content: %s"' % handler.response.headers.get('X-Associated-Content', None))
 
 
 IntegrationBridge = UpstreamBus()

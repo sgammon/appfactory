@@ -5,6 +5,7 @@ from apptools.util import debug
 from apptools.util import datastructures
 
 # Layer9 Command Busses
+from appfactory.integration.abstract import CommandBus as CoreCommandBus
 from appfactory.integration.upstream import IntegrationBridge as UpstreamIntegrationBus
 from appfactory.integration.frontline import IntegrationBridge as FrontlineIntegrationBus
 from appfactory.integration.controller import IntegrationBridge as ControllerIntegrationBus
@@ -19,16 +20,7 @@ class AppFactoryMixin(object):
     _appfactory_version = (0, 0)  # This library's version.
 
     # AppFactory Integration
-    flags = datastructures.DictProxy({
-        'OPT': False,   # Optimizations (On/Off)
-        'SPDY': False,  # SPDY mode (On/Off)
-        'PS': False,    # Pagespeed mode (On/Off)
-        'PRI': False,   # Partial Response Hash (String)
-        'OFR': False,   # Omit Frame (On/Off)
-        'AP': False,    # Agent Privilege (On/Off)
-        'INS': False,   # Instrumentation (On/Off)
-        'WSP': False    # Socket Push (On/Off)
-    })
+    flags = datastructures.DictProxy(dict([(i, False) for i in CoreCommandBus.flags]))
 
     broker = None  # Address of the frontline instance brokering this request/response cycle.
     frontline = None  # The frontline cluster string ID brokering this request/response cycle.
